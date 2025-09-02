@@ -1,51 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Minecraft Panel</title>
-  <style>
-    body { font-family: Arial; background:#222; color:#fff; }
-    #console { background:#000; color:#0f0; padding:10px; height:300px; overflow-y:scroll; }
-    button { margin:5px; padding:10px; }
-  </style>
-</head>
-<body>
-  <h1>Minecraft Server Panel</h1>
-  <div>
-    <button onclick="start()">Start</button>
-    <button onclick="stop()">Stop</button>
-    <button onclick="refresh()">Refresh</button>
-  </div>
-  <p id="status">Status: --</p>
-  <p id="resources">CPU: -- RAM: --</p>
-  <h2>Console</h2>
-  <div id="console"></div>
-  <h2>Install Plugin</h2>
-  <input id="plugin_url" placeholder="Plugin URL">
-  <button onclick="install()">Install</button>
-  
-  <script>
-    async function start() {
-      let res = await fetch("/start", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({version:"1.20.1", ram:"2G"})});
-      alert(await res.text());
-    }
-    async function stop() {
-      let res = await fetch("/stop", {method:"POST"});
-      alert(await res.text());
-    }
-    async function refresh() {
-      let res = await fetch("/status"); let data = await res.json();
-      document.getElementById("status").innerText = "Running: " + data.running;
-      document.getElementById("resources").innerText = "CPU: " + data.cpu + "% RAM: " + data.ram + "%";
-      let consoleRes = await fetch("/console"); let consoleData = await consoleRes.json();
-      document.getElementById("console").innerText = consoleData.console.join("\n");
-    }
-    async function install() {
-      const url = document.getElementById("plugin_url").value;
-      let res = await fetch("/plugins", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({url})});
-      alert(await res.text());
-    }
-    setInterval(refresh, 5000);
-  </script>
-</body>
-</html>
+<p>Version: <span id="versionDisplay"></span></p>
+<p>Software: <span id="softwareDisplay"></span></p>
+<button id="startBtn">Start Server</button>
+<div id="cpuRam"></div>
+<div id="fileManager"></div>
+<div id="pluginInstaller"></div>
+<pre id="console">Server logs will appear here...</pre>
 
+<script>
+const version = localStorage.getItem('mcVersion');
+const software = localStorage.getItem('mcSoftware');
+document.getElementById('versionDisplay').textContent = version;
+document.getElementById('softwareDisplay').textContent = software;
+
+const startBtn = document.getElementById('startBtn');
+const consoleDiv = document.getElementById('console');
+
+startBtn.addEventListener('click', async () => {
+  consoleDiv.textContent = "Starting deployer...\n";
+  const response = await fetch('https://your-colab-backend-url/run',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({version, software})
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  while(true){
+    const {done,value} = await reader.read();
+    if(done) break;
+    consoleDiv.textContent += decoder.decode(value);
+  }
+});
+
+// Optional: Fetch CPU/RAM periodically
+setInterval(async () => {
+  const res = await fetch('https://your-colab-backend-url/status');
+  const data = await res.json();
+  document.getElementById('cpuRam').textContent = `CPU: ${data.cpu}% | RAM: ${data.ramUsed}/${data.ramTotal}MB`;
+}, 5000);
+
+// Optional: File manager & plugin installer can use similar fetch endpoints
+</script>
