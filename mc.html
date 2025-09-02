@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minecraft Server Setup</title>
+<style>
+body {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  flex-direction:column;
+  font-family:Arial;
+  background:#111;
+  color:white;
+}
+select, button {
+  padding:10px;
+  font-size:18px;
+  margin-top:15px;
+}
+</style>
+</head>
+<body>
+<h1>Minecraft Server Setup</h1>
+
+<p>Select Version:</p>
+<select id="versionSelect"></select>
+
+<p>Select Software:</p>
+<select id="softwareSelect">
+  <option value="vanilla">Vanilla</option>
+  <option value="fabric">Fabric</option>
+  <option value="forge">Forge</option>
+  <option value="spigot">Spigot</option>
+  <option value="paper">Paper</option>
+  <option value="purpur">Purpur</option>
+  <option value="bungeecord">BungeeCord</option>
+  <option value="waterfall">Waterfall</option>
+  <option value="velocity">Velocity</option>
+</select>
+
+<button id="deployBtn">Go to Panel</button>
+
+<script>
+// Populate versions 1.8.9 → 1.21.8
+const versionSelect = document.getElementById('versionSelect');
+for(let major=8; major<=21; major++){
+  for(let minor=0; minor<=9; minor++){
+    if(major==21 && minor>8) break;
+    versionSelect.innerHTML += `<option value="1.${major}.${minor}">1.${major}.${minor}</option>`;
+  }
+}
+
+document.getElementById('deployBtn').addEventListener('click',()=>{
+  localStorage.setItem('mcVersion', versionSelect.value);
+  localStorage.setItem('mcSoftware', document.getElementById('softwareSelect').value);
+  window.location.href='panel.html';
+});
+</script>
+</body>
+</html>
