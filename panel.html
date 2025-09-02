@@ -2,25 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Server Panel</title>
+<title>LunarHost MC Panel</title>
 <style>
 body {
-  display:flex;
-  justify-content:flex-start;
-  flex-direction:column;
-  font-family:Arial;
-  background:#111;
-  color:white;
-  padding:20px;
+  font-family: Arial, sans-serif;
+  background-color: #111;
+  color: white;
+  padding: 20px;
 }
-button { padding:10px 20px; font-size:16px; margin-top:10px; cursor:pointer; }
-pre { margin-top:10px; font-size:14px; max-width:800px; white-space:pre-line; background:#222; padding:10px; border-radius:5px; overflow-x:auto; }
-#cpuRam, #fileManager, #pluginInstaller { margin-top:15px; padding:10px; background:#222; border-radius:5px; }
-input { padding:5px; font-size:14px; margin-right:5px; }
+h1 { margin-bottom: 10px; }
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #1a73e8;
+  color: white;
+}
+button:hover { background-color: #155ab6; }
+#cpuRam { margin-top: 15px; padding: 10px; background:#222; border-radius:5px; }
+#console { margin-top: 15px; padding: 10px; background:#222; border-radius:5px; max-height:300px; overflow-y:auto; white-space:pre-line; }
 </style>
 </head>
 <body>
-<h1>Minecraft Server Panel</h1>
+
+<h1>LunarHost Minecraft Panel</h1>
+
 <p>Version: <span id="versionDisplay"></span></p>
 <p>Software: <span id="softwareDisplay"></span></p>
 
@@ -28,86 +37,56 @@ input { padding:5px; font-size:14px; margin-right:5px; }
 
 <div id="cpuRam">CPU/RAM info will appear here</div>
 
-<div id="fileManager">
-<h3>File Manager</h3>
-<button onclick="listFiles()">Refresh File List</button>
-<div id="filesList"></div>
-</div>
-
-<div id="pluginInstaller">
-<h3>Plugin Installer</h3>
-<input type="text" id="pluginUrl" placeholder="Plugin Download URL"/>
-<button onclick="installPlugin()">Install Plugin</button>
-</div>
-
 <pre id="console">Server logs will appear here...</pre>
 
 <script>
-const version = localStorage.getItem('mcVersion');
-const software = localStorage.getItem('mcSoftware');
+const version = localStorage.getItem('mcVersion') || "1.20.1";
+const software = localStorage.getItem('mcSoftware') || "paper";
+
 document.getElementById('versionDisplay').textContent = version;
 document.getElementById('softwareDisplay').textContent = software;
 
 const consoleDiv = document.getElementById('console');
-const startBtn = document.getElementById('startBtn');
+const cpuDiv = document.getElementById('cpuRam');
 
-// Start server
-startBtn.addEventListener('click', async () => {
-  consoleDiv.textContent = "Starting deployer...\n";
+document.getElementById('startBtn').addEventListener('click', async () => {
+  consoleDiv.textContent = "Creating your personal Colab deployer notebook...\n";
+
   try {
-    const response = await fetch('https://your-colab-backend-url/run', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({version, software})
+    // Send request to your backend to create a user-specific Colab
+    const user_id = "user" + Date.now(); // unique ID for each user
+    const response = await fetch('https://your-backend-url/deployer', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({version, software, user_id})
     });
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    while(true){
-      const {done,value} = await reader.read();
-      if(done) break;
-      consoleDiv.textContent += decoder.decode(value);
-    }
-  } catch(err){
-    consoleDiv.textContent += "\nError: "+err;
+
+    const data = await response.json();
+    const colab_link = data.colab_link;
+
+    consoleDiv.textContent += "Colab notebook created!\n";
+    consoleDiv.textContent += "Opening notebook...\n";
+
+    // Open user-specific Colab notebook in a new tab
+    window.open(colab_link, "_blank");
+
+    consoleDiv.textContent += "Please run the cells in Colab to set up your server.\n";
+
+  } catch(err) {
+    consoleDiv.textContent += "Error creating Colab notebook: " + err + "\n";
   }
 });
 
-// CPU/RAM updates
+// Optional: CPU/RAM polling if your backend provides it
 setInterval(async () => {
   try {
-    const res = await fetch('https://your-colab-backend-url/status');
-    const data = await res.json();
-    document.getElementById('cpuRam').textContent = `CPU: ${data.cpu}% | RAM: ${data.ramUsed}/${data.ramTotal} MB`;
-  } catch {}
-},5000);
-
-// File Manager
-async function listFiles(){
-  try {
-    const res = await fetch('https://your-colab-backend-url/files');
-    const files = await res.json();
-    let html = "<ul>";
-    files.forEach(f => { html += `<li>${f}</li>`; });
-    html += "</ul>";
-    document.getElementById('filesList').innerHTML = html;
-  } catch(err){ console.log(err); }
-}
-
-// Plugin Installer
-async function installPlugin(){
-  const url = document.getElementById('pluginUrl').value;
-  if(!url) return alert("Enter plugin URL");
-  try {
-    const res = await fetch('https://your-colab-backend-url/install-plugin',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({url})
-    });
-    const result = await res.text();
-    alert(result);
-    listFiles();
-  } catch(err){ console.log(err); }
-}
+    const res = await fetch('https://your-backend-url/status');
+    const stats = await res.json();
+    cpuDiv.textContent = `CPU: ${stats.cpu}% | RAM: ${stats.ramUsed}/${stats.ramTotal} MB`;
+  } catch(err) {
+    cpuDiv.textContent = "CPU/RAM info unavailable";
+  }
+}, 5000);
 
 </script>
 </body>
