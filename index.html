@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LUNARHOST</title>
+<style>
+body {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  flex-direction:column;
+  font-family:Arial;
+  background:#111;
+  color:white;
+}
+#hostingName {
+  font-size: 60px;
+  font-weight: bold;
+  color: #00ffff;
+  animation: slideDrop 2s infinite alternate;
+  text-align: center;
+}
+@keyframes slideDrop {
+  0% { transform: translateY(-50px); opacity:0;}
+  50% { transform: translateY(0px); opacity:1;}
+  100% { transform: translateY(20px); opacity:0.8;}
+}
+button {
+  padding:15px 30px;
+  font-size:20px;
+  margin-top:20px;
+  cursor:pointer;
+}
+button:disabled {
+  opacity:0.5;
+  cursor:not-allowed;
+}
+</style>
+</head>
+<body>
+<h1 id="hostingName">LUNARHOST</h1>
+<div>
+  <button onclick="location.href='mc.html'">MC Host</button>
+  <button disabled>VPS (Coming Soon)</button>
+  <button disabled>Web Host (Coming Soon)</button>
+</div>
+</body>
+</html>
